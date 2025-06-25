@@ -16,12 +16,18 @@ class ErrorBoundary extends React.Component {
     // Send error to backend
     console.log(error);
 
-    fetch('http://localhost:4000/log-error', {
+    // fetch('http://localhost:4000/log-error', {
+     fetch('https://asia-south1-logger-462111.cloudfunctions.net/logAll', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: error.toString(),
-        stack: errorInfo.componentStack,
+        // message: error.toString(),
+        // stack: errorInfo.componentStack,
+        level: 'error',
+        args: [error.toString(), errorInfo.componentStack],
+        // url: window.location.href,
+        // userAgent: navigator.userAgent,
+        // timestamp: new Date().toISOString(),
       }),
     }).catch(err => console.error('Failed to log error:', err));
   }

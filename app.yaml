@@ -1,0 +1,12 @@
+runtime: nodejs20  
+
+handlers:
+  # Serve index.html for root
+  - url: /
+    static_files: build/index.html
+    upload: build/index.html
+
+  # Serve all other static files
+  - url: /(.*)
+    static_files: build/\1
+    upload: build/(.*)
