@@ -1,34 +1,63 @@
-// index.js
+// exports.logAll = (req, res) => {
+//   if (req.method === 'OPTIONS') {
+//     res.set({
+//       'Access-Control-Allow-Origin': '*',
+//       'Access-Control-Allow-Methods': 'POST, OPTIONS',
+//       'Access-Control-Allow-Headers': 'Content-Type',
+//     });
+//     return res.status(204).send('');
+//   }
+
+//   let { severity = 'default', textPayload, timestamp, url, userAgent } = req.body || {};
+//   severity = severity.toLowerCase();
+
+//   const meta = `[${timestamp}] ${url} • ${userAgent}`;
+//   switch (severity) {
+//     case 'error':
+//       console.error(meta, textPayload);
+//       break;
+//     case 'warn':
+//     case 'warning':
+//       console.warn(meta, textPayload);
+//       break;
+//     case 'info':
+//       console.info(meta, textPayload);
+//       break;
+//     default:
+//       console.log(meta, textPayload);
+//   }
+
+//   res.set('Access-Control-Allow-Origin', '*');
+//   return res.status(204).send('');
+// };
 exports.logAll = (req, res) => {
-  // --- 1) Handle CORS preflight ---
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.set({
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     });
-    return res.status(204).send('');   // <— must return here!
+    return res.status(204).send('');
   }
 
-  // --- 2) Extract your payload ---
-  const { level, args, url, userAgent, timestamp } = req.body || {};
-  const msg = Array.isArray(args)
-    ? args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ')
-    : JSON.stringify(args);
+  // Destructure incoming payload
+  let { severity = 'ERROR', textPayload = '', timestamp, url, userAgent } = req.body || {};
+  severity = severity.toUpperCase();
 
-  // --- 3) Mirror to console at the right severity ---
-  switch (level) {
-    case 'error':
-      console.error(`[${timestamp}]`, msg, { url, userAgent });
-      break;
-    case 'warn':
-      console.warn (`[${timestamp}]`, msg, { url, userAgent });
-      break;
-    default:
-      console.log (`[${timestamp}] [${level}]`, msg, { url, userAgent });
-  }
+  // Build a structured log entry
+  const logEntry = {
+    severity,       // must be one of: "ERROR","WARNING","INFO","DEFAULT"
+    timestamp,
+    url,
+    userAgent,
+    message: textPayload
+  };
 
-  // --- 4) Return success AND allow CORS on the actual response ---
+  // Always write JSON to stdout
+  console.log(JSON.stringify(logEntry));
+
+  // CORS on final response
   res.set('Access-Control-Allow-Origin', '*');
   return res.status(204).send('');
 };

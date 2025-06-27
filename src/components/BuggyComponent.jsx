@@ -1,53 +1,79 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+
+function customLogger(message, data = null, severity = 'error') {
+  const logData = { message, data, severity, timestamp: new Date().toISOString() };
+  switch (severity) {
+    case 'error':
+      console.error(logData);
+      break;
+    case 'warn':
+      console.warn(logData);
+      break;
+    case 'info':
+      console.info(logData);
+      break;
+    default:
+      console.log(logData);
+  }
+}
+
 function BuggyComponent() {
   const [user, setUser] = useState(null);
   const [count, setCount] = useState(0);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    console.log("Age:", person?.age || "N/A");
+    // This simulates a ReferenceError (person is not defined)
+    try {
+      customLogger("Age:", { age: person.age }, 'error');
+    } catch (err) {
+      customLogger("ReferenceError caught in useEffect", { error: err.message, stack: err.stack }, 'error');
+    }
     if (inputRef.current) if (inputRef.current) if (inputRef.current) if (inputRef.current) inputRef.current.value = 'Test';
     setCount(prev => prev + 1);
     // Intentional: accessing property of null
-    //console.log('User name:', user.name); // 💥 TypeError
+    //customLogger('User name:', { name: user.name }, 'error'); // 💥 TypeError
     if (user) {
-      console.log('User name:', user.name);
+      customLogger('User name:', { name: user.name }, 'error');
     } else {
-      console.log('User is null or undefined.');
+      customLogger('User is null or undefined.', null, 'error');
     }
-  }, [user]); // Add user as a dependency to useEffect
+  }, [user]);
 
   const triggerNullPointerError = () => {
-    const person = null;
-    console.log(person?.age); // Using optional chaining to prevent error
+    try {
+      const person = null;
+      // This will throw a TypeError
+      customLogger('Trigger NullPointerError', { age: person.age }, 'error');
+    } catch (err) {
+      customLogger("NullPointerError caught", { error: err.message, stack: err.stack }, 'error');
+    }
   };
 
   const triggerUndefinedFunctionError = () => {
     let obj = {};
-    //obj.callMe(); // 💥
-    if (obj.callMe) {
-        obj.callMe();
-    } else {
-        console.log("callMe function is not defined on obj");
+    try {
+      obj.callMe(); // This will throw a TypeError
+      customLogger("callMe function called on obj", null, 'error');
+    } catch (err) {
+      customLogger("Undefined function error caught", { error: err.message, stack: err.stack }, 'error');
     }
   };
 
   const triggerRefError = () => {
-    //if (inputRef.current) if (inputRef.current) if (inputRef.current) if (inputRef.current) inputRef.current.value = 'Test'; // 💥
-    if(inputRef.current){
+    if (inputRef.current) {
       if (inputRef.current) if (inputRef.current) if (inputRef.current) if (inputRef.current) inputRef.current.value = 'Test';
+      customLogger("inputRef.current is set", null, 'error');
     } else {
-      console.log("inputRef.current is null");
+      customLogger("inputRef.current is null", null, 'error');
     }
   };
 
   const triggerStateBug = () => {
-    setCount(prevCount => prevCount + 1); // Fixes the state update issue
-    //setCount(prev => prev + 1);
-    //console.log('Count (should not be stale):', count); // 💥
+    setCount(prevCount => prevCount + 1);
     setCount(prevCount => {
-      console.log('Count (should not be stale):', prevCount + 1); // Log the next state
+      customLogger('Count (should not be stale):', { nextCount: prevCount + 1 }, 'error');
       return prevCount + 1;
     });
   };
@@ -59,9 +85,10 @@ function BuggyComponent() {
       <button onClick={triggerUndefinedFunctionError}>Trigger Undefined Function</button>
       <button onClick={triggerRefError}>Trigger Ref Error</button>
       <button onClick={triggerStateBug}>Trigger State Bug</button>
-      <input ref={inputRef} /> {/*  Fixed ref */}
+      <input ref={inputRef} />
     </div>
   );
 }
 
 export default BuggyComponent;
+// Note: This component is intentionally buggy for demonstration purposes.

@@ -1,3 +1,4 @@
+// ErrorBoundary.jsx
 import React from 'react';
 
 class ErrorBoundary extends React.Component {
@@ -11,25 +12,21 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Error caught by ErrorBoundary:", error);
-
-    // Send error to backend
-    console.log(error);
-
-    // fetch('http://localhost:4000/log-error', {
-     fetch('https://asia-south1-logger-462111.cloudfunctions.net/logAll', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        // message: error.toString(),
-        // stack: errorInfo.componentStack,
-        level: 'error',
-        args: [error.toString(), errorInfo.componentStack],
-        // url: window.location.href,
-        // userAgent: navigator.userAgent,
-        // timestamp: new Date().toISOString(),
-      }),
-    }).catch(err => console.error('Failed to log error:', err));
+    fetch(
+      'https://asia-south1-logger-462111.cloudfunctions.net/logAll',
+      {
+        method: 'POST',
+        // mode: 'cors',                    // ← optional, helps with CORS
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          severity: 'ERROR',            // CF will lowercase for you
+          textPayload: `${error}\n${errorInfo.componentStack}`,
+          timestamp: new Date().toISOString(),
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+        }),
+      }
+    ).catch(err => console.error('Failed to log error:', err));
   }
 
   render() {

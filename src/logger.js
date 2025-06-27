@@ -1,22 +1,28 @@
-// src/logger.js
-// Replace <PROJECT> with your actual project ID or leave the full URL:
 const CF_URL = 'https://asia-south1-logger-462111.cloudfunctions.net/logAll';
 
+const levelToSeverity = {
+  error: 'error',
+  warn:  'warn',
+  info:  'info',
+  log:   'default',
+};
+
+
 function sendLog(level, args) {
+  const severity = levelToSeverity[level] || 'DEFAULT';
   fetch(CF_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      level,
-      args,
+      severity : severity.toLowerCase(),
+      textPayload: args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '),
+      timestamp: new Date().toISOString(),
       url: window.location.href,
       userAgent: navigator.userAgent,
-      timestamp: new Date().toISOString(),
     }),
   }).catch(() => { /* silently ignore */ });
 }
 
-// Override all console methods
 ['log', 'info', 'warn', 'error'].forEach(level => {
   const orig = console[level].bind(console);
   console[level] = (...args) => {
