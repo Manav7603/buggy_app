@@ -26,7 +26,10 @@ function BuggyComponent() {
   useEffect(() => {
     // This simulates a ReferenceError (person is not defined)
     try {
-      customLogger("Age:", { age: person.age }, 'error');
+      // Attempting to log a property of an undefined variable
+      // This will throw a ReferenceError which is correctly caught
+      let person;
+      customLogger("Age:", { age: person?.age }, 'error');
     } catch (err) {
       customLogger("ReferenceError caught in useEffect", { error: err.message, stack: err.stack }, 'error');
     }
@@ -45,7 +48,7 @@ function BuggyComponent() {
     try {
       const person = null;
       // This will throw a TypeError
-      //customLogger('Trigger NullPointerError', { age: person.age }, 'error');
+      customLogger('Trigger NullPointerError', { age: person?.age }, 'error');
     } catch (err) {
       customLogger("NullPointerError caught", { error: err.message, stack: err.stack }, 'error');
     }
